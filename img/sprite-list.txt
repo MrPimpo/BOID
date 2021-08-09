@@ -1,0 +1,3 @@
+6	16	16	CROW	crow_profile.png
+6	32	16	CROWX	crowfix.png
+1	22	32	SCARE	scarecrow.png
