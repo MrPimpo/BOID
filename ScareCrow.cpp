@@ -79,9 +79,6 @@ public:
 		set(mouse);
 		xspd += (x - prevX) * deltaTime;
 
-		//if (xspd < -mx) xspd = -mx;
-		//if (xspd > mx) xspd = mx;
-
 		xspd *= .9f;
 	}
 

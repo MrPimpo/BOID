@@ -168,7 +168,7 @@ public:
 			imgNum = imgNum % spr->getImgCount();
 			SDL_Rect s = { imgNum * spr->getTexWidth(), 0, spr->getTexWidth(), spr->getTexHeight() };
 			SDL_Texture* t = spr->getTexture();
-			Vec2D scale = (xScale, yScale);
+			Vec2D scale = { xScale, yScale };
 			SDL_Point p = spr->getOrigin_SDL_Point(scale);
 			if (NULL != t)
 				SDL_RenderCopyEx(renderer, t, &s, &w, (angle - 90.0), &p, flip);

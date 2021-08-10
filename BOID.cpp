@@ -17,7 +17,7 @@ public:
 	int ID;
 	float scale = .5f;
 
-	BOID(Vec2D _position, Vec2D _velocity,float _scale, int id)
+	BOID(Vec2D _position, Vec2D _velocity, float _scale, int id)
 	{
 		this->position.set(_position);
 		this->velocity.set(_velocity);
@@ -32,8 +32,8 @@ class FLOCK {
 	float repel_range;
 	float treshold;
 	float flock_count;
-	Vec2D flock_position, flock_velocity;
 	std::list<BOID*> flock;
+	// this "queue" is used to increment BOID's animation states in batches ( so they appear to flap their wings separately )
 	int sprite_queue_length = 25,
 		sprite_queue = 0;
 	Sprite* SPR_BOID = NULL;
@@ -52,14 +52,16 @@ public:
 		for (float i = .0f; i < instances_count; i+=1.0f)
 		{
 			flock.push_back(new BOID({ (float)(rand() % SCREEN->w),(float)(rand() % SCREEN->h) }, {0,0 },(40+rand()%20)*.01f, i));
-			//flock.push_back(new BOID({ (float)(rand() % SCREEN->w),(float)(rand()%SCREEN->h) }, { (float)(-3 + rand() % 6),(float)(-3 + rand() % 6) }, i));
-			//flock.push_back(new BOID({ (SCREEN->w * .5f) + (-flock_count * .5f) + i, (SCREEN->h * .5f) }, { (-flock_count * .5f) + i, (-flock_count * .5f) + i }, i));
 		}
 	}
 
-	void rule2(BOID &BD, float deltaTime)
+	void rule123(BOID &BD, float deltaTime)
 	{
-		Vec2D v, p, r = { 0,0 };
+		//	'p' is used to calculate a mean of neighbours position,
+		//	'r' is used to store velocity repeling current boid from neighbours that are too close
+		//	and 'v' is used to calculate a mean of neighbours velocity
+		
+		Vec2D v, p, r;
 		int n = 0.0f;
 
 		for (auto& b : flock)
@@ -81,7 +83,7 @@ public:
 		}
 
 		p = ((p / n) - BD.position) * .0002f;
-		v =  ((v / n)) * .04f;
+		v =  ((v / n)) * .08f;
 		BD.velocity += (v+p+r) * deltaTime;
 	}
 
@@ -104,7 +106,7 @@ public:
 		{
 			if (sprite_queue == (i / sprite_queue_length))
 				b->anim += b->velocity.magnitude() * (((int)(b->anim) % 6) == 0 ? .01f : .5f) * deltaTime;
-			rule2(*b, deltaTime);
+			rule123(*b, deltaTime);
 
 			float mod3 = 1.0f;
 
@@ -120,9 +122,12 @@ public:
 
 			Vec2D normalized = b->velocity.normalize();
 
-			/*float drag = .02;
+			/*
+			// better to "trim" velocity to its max value
+			float drag = .02;
 			if (b->velocity.magnitude() > drag * deltaTime)
-				b->velocity -= normalized * drag * deltaTime;*/
+				b->velocity -= normalized * drag * deltaTime;
+			*/
 
 			float max_velocity = 20.f * b->scale;
 			if (b->velocity.magnitude() > max_velocity)
@@ -140,18 +145,21 @@ public:
 	{
 		SDL_SetRenderDrawColor(renderer, 50, 50, 200, 255);
 		for (auto& b : flock)
-		{
 			SpriteRenderer::renderEx(renderer, SPR_BOID, b->position.x, b->position.y, b->anim,
 				b->velocity.getAngle()+90.0f, b->scale*(b->velocity.x<0?1.0f:-1.0f), b->scale);
-			/*SDL_FRect r = {b->position.x - 5.0f, b->position.y - 5.0f, 10.0f, 10.0f};
+	}
+
+	void renderDebug(SDL_Renderer* renderer)
+	{
+		SDL_SetRenderDrawColor(renderer, 50, 50, 200, 255);
+		for (auto& b : flock)
+		{
+			SDL_FRect r = {b->position.x - 5.0f, b->position.y - 5.0f, 10.0f, 10.0f};
 			SDL_RenderFillRectF(renderer, &r);
 			r = { b->position.x - 500.0f, b->position.y - 500.0f, 1000.0f, 1000.0f };
-			//SDL_RenderDrawRectF(renderer, &r);
-			//SDL_RenderDrawLineF(renderer, b->position.x, b->position.y, SCREEN->w/2,SCREEN->h/2);
-			SDL_RenderDrawLineF(renderer, b->position.x, b->position.y, b->position.x + b->velocity.x * 3.0f, b->position.y + b->velocity.y * 3.0f);*/
+			SDL_RenderDrawLineF(renderer, b->position.x, b->position.y, b->position.x + b->velocity.x * 3.0f, b->position.y + b->velocity.y * 3.0f);
 		}
-		
-		//TextRenderer::renderBanner(renderer, 250, 250, flock_velocity.toString());
+
 	}
 
 	void mouseRepelSwitch(bool mouse_repel)

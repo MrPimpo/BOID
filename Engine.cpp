@@ -64,7 +64,7 @@ public:
 		}
 
 		window =
-			SDL_CreateWindow("Sledge", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+			SDL_CreateWindow("BOID", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 				SCREEN.w, SCREEN.h, SDL_WINDOW_SHOWN);
 		if (window == NULL)
 		{
@@ -94,7 +94,6 @@ public:
 		if (SpriteRenderer::init(renderer) > 0)
 			std::cout << "Could not initialize sprite handler. " << SDL_GetError() << std::endl;
 
-		// all of the objects that use static pointer to a sprite have to be initiated
 		gui.init(&SCREEN);
 		flock.init(&SCREEN, 300, false);
 		scarecrow.init(&flock);
@@ -103,13 +102,7 @@ public:
 		running = true;
 		ticks = SDL_GetTicks();
 
-		// SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft");
 		SDL_Log("SDL initialized properly");
-
-		//SDL_DisplayMode DM;
-		//SDL_GetCurrentDisplayMode(0, &DM);
-		//SCREEN.w = DM.w;
-		//SCREEN.h = DM.h;
 
 		std::cout << "Width: " << SCREEN.w << ", height: " << SCREEN.h << std::endl;
 
@@ -158,8 +151,7 @@ public:
 
 	void render()
 	{
-		// SDL_SetRenderDrawColor(renderer, steps, steps, steps, 255);
-		SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
+		SDL_SetRenderDrawColor(renderer, 128, 128, 196, 255);
 		SDL_RenderClear(renderer);
 
 		flock.render(renderer);

@@ -5,14 +5,37 @@ constexpr float F_PI = 3.141592653f;
 
 #include "SDL.h"
 #include <math.h>
-#include <string>
+
+
 
 class Vec2D
 {
 public:
-	float x, y;
+	static float Q_rsqrt(float number) // inverse sqrt - stolen from QuakeIII
+	{
+		long i;
+		float x2, y;
+		const float threehalfs = 1.5F;
 
-	Vec2D(float _x = .0f, float _y = .0f)
+		x2 = number * 0.5F;
+		y = number;
+		i = *(long*)&y;                       // evil floating Vec2D bit level hacking
+		i = 0x5f3759df - (i >> 1);               // what the fuck? 
+		y = *(float*)&i;
+		y = y * (threehalfs - (x2 * y * y));   // 1st iteration
+	//	y  = y * ( threehalfs - ( x2 * y * y ) );   // 2nd iteration, this can be removed
+
+		return y;
+	}
+
+	float x, y;
+	Vec2D()
+	{
+		x = 0;
+		y = 0;
+	}
+
+	Vec2D(float _x, float _y)
 	{
 		x = _x;
 		y = _y;
@@ -30,7 +53,7 @@ public:
 		y = p.y;
 	}
 
-	inline void set(float _x, float _y)
+	inline void set(const float& _x, const float& _y)
 	{
 		x = _x;
 		y = _y;
@@ -59,12 +82,11 @@ public:
 
 	inline float magnitude()
 	{
-		return sqrtf((x * x) + (y * y));
+		return (1/Q_rsqrt((x * x) + (y * y)));//sqrtf((x * x) + (y * y));
 	}
 	inline Vec2D normalize()
 	{
-		float m = magnitude();
-		float r = 1.0f / (m == 0 ? 1 : m);
+		float r = Q_rsqrt((x * x) + (y * y));
 		return Vec2D(x * r, y * r);
 	}
 	inline Vec2D perpendicular()
@@ -121,36 +143,14 @@ public:
 		return *this;
 	}
 
-	static float Q_rsqrt(float number) // Stole it from QuakeIII
-	{
-		long i;
-		float x2, y;
-		const float threehalfs = 1.5F;
-
-		x2 = number * 0.5F;
-		y = number;
-		i = *(long*)&y;                       // evil floating Vec2D bit level hacking
-		i = 0x5f3759df - (i >> 1);               // what the fuck? 
-		y = *(float*)&i;
-		y = y * (threehalfs - (x2 * y * y));   // 1st iteration
-	//	y  = y * ( threehalfs - ( x2 * y * y ) );   // 2nd iteration, this can be removed
-
-		return y;
-	}
-
 	inline static float getDistance(float x, float y, float x2, float y2)
 	{
-		return sqrtf((x2 - x) * (x2 - x) + (y2 - y) * (y2 - y));
+		return (1 / Q_rsqrt((x2 - x) * (x2 - x) + (y2 - y) * (y2 - y)));
 	}
 
 	inline static float getDistance(Vec2D& p1, Vec2D& p2)
 	{
 		return getDistance(p1.x, p1.y, p2.x, p2.y);
-	}
-
-	inline float getDistance(const float& _x, const float& _y)
-	{
-		return getDistance(this->x, this->y, _x, _y);
 	}
 
 	inline float getDistance(Vec2D& p)
@@ -177,11 +177,6 @@ public:
 		return getDirection(p1.x, p1.y, p2.x, p2.y);
 	}
 
-	inline float getDirection(float _x, float _y)
-	{
-		return getDirection(this->x, this->y, _x, _y);
-	}
-
 	inline float getDirection(Vec2D& p)
 	{
 		return getDirection(*this, p);
@@ -200,17 +195,6 @@ public:
 	void render(SDL_Renderer* renderer, const Vec2D& camera)
 	{
 		SDL_RenderDrawPoint(renderer, (int)(x - camera.x), (int)(y - camera.y));
-	}
-
-	std::string toString()
-	{
-		std::string s = "(";
-		s.append(std::to_string(x));
-		s.append("; ");
-		s.append(std::to_string(y));
-		s.append(")");
-
-		return s;
 	}
 };
 
